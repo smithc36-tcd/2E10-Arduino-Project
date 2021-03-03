@@ -27,22 +27,22 @@ server.begin();
 void loop() {
   WiFiClient client = server.available();
     if (client.connected()) {
-      //Serial.println("Client Connected");
+      Serial.println("Client Connected");
       char c = client.read();
         if(c == 'a'){
-          //Serial.println("Starting Right Motor");
+          Serial.println("Starting Right Motor");
       turn_r();
          }
            if(c == 'd'){
-          //Serial.println("Starting Left Motor");
+          Serial.println("Starting Left Motor");
       turn_l();
          }
          if(c == 'w'){
-          //Serial.println("Starting Forward");
+          Serial.println("Starting Forward");
       forward();
          }
          if(c == 's'){
-          //Serial.println("Starting Backward");
+          Serial.println("Starting Backward");
       backward();
          }
     }
