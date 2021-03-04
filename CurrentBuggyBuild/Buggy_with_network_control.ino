@@ -41,24 +41,11 @@ void setup() {
 }
 
 void loop() { 
-  WiFiClient client = server.available();
-  if (client.connected()) {
-    //Serial.println("Client Connected");
-    char c = client.read();
+  read_from_client();
 
-        if (c == 'a') {
-          //Serial.println("Starting Right Motor");
-          buggy_line_follow_bool = true;
-        }
-        if (c == 'd') {
-          //Serial.println("Starting Left Motor");
-          buggy_line_follow_bool = false;
-        }
-    
-    }
-    while(buggy_line_follow_bool){
-      Buggy_line_follow();
-      read_from_client();
+  while(buggy_line_follow_bool){
+     Buggy_line_follow();
+     read_from_client();
   }
 }
 
@@ -102,16 +89,14 @@ void Buggy_line_follow(){
 
 void read_from_client(){
   WiFiClient client = server.available();
+  if (client.connected()) {
   char c = client.read();
 
         if (c == 'a') {
-          //Serial.println("Starting Right Motor");
           buggy_line_follow_bool = true;
-          //return true;
         }
         if (c == 'd') {
-          //Serial.println("Starting Left Motor");
           buggy_line_follow_bool = false;
-          //return false;
         }
+  }
 }
