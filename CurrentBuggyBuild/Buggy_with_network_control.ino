@@ -7,6 +7,11 @@ char command;
 
 void Buggy_line_follow();
 void read_from_client();
+void write_to_client();
+void stopbuggy();
+
+const int Value = 255;
+const int Off = 0;
 
 const int LEYE = 2; // sets name for left eye 
 const int REYE = 10; // sets name for right eye 
@@ -42,10 +47,15 @@ void setup() {
 
 void loop() { 
   read_from_client();
+  //write_to_client();
 
   while(buggy_line_follow_bool){
      Buggy_line_follow();
      read_from_client();
+     if(buggy_line_follow_bool == false){
+      break;
+     }
+    // write_to_client();
   }
 }
 
@@ -53,8 +63,6 @@ void loop() {
 void Buggy_line_follow(){
  int distance;
   long duration;
-  int Value = 255;
-  int Off = 0;
   bool US_Close = false;
 
   digitalWrite( US_TRIG, LOW );
@@ -80,14 +88,24 @@ void Buggy_line_follow(){
     analogWrite(PosLeftMotor, Off);// No power 
   }
 
-  if( digitalRead( REYE ) == LOW && !US_Close ){ // if left eye is LOW send high signal to motor input A4 and to A3
+  if( digitalRead( REYE ) == LOW && !US_Close){ // if left eye is LOW send high signal to motor input A4 and to A3
     analogWrite(PosRightMotor, Value);
   }else{
     analogWrite(PosRightMotor, Off); // no power 
   }
+  
+   read_from_client();
+   //write_to_client();
+}
+void stopbuggy(){
+  
+  analogWrite(PosLeftMotor, Off);
+  analogWrite(PosRightMotor, Off);
 }
 
 void read_from_client(){
+
+  //Serial.println("Here in read");
   WiFiClient client = server.available();
   if (client.connected()) {
   char c = client.read();
@@ -97,6 +115,30 @@ void read_from_client(){
         }
         if (c == 'd') {
           buggy_line_follow_bool = false;
+          stopbuggy();
         }
   }
+}
+
+void write_to_client(){
+  WiFiClient client = server.available();
+  if (client.connected()) {
+    if(digitalRead(LEYE) == HIGH){
+      char LEYEON = 'u';
+      server.write(LEYEON);
+      Serial.print(LEYEON);
+    }
+    if(digitalRead(LEYE) == LOW){
+       char LEYEOFF = 'i';   
+      server.write(LEYEOFF);
+    }
+    if(digitalRead(REYE) == HIGH){
+      char REYEON = 'o';
+      server.write(REYEON);
+    }
+    if(digitalRead(REYE) == LOW){
+      char REYEOFF = 'p';
+      server.write(REYEOFF);
+    }
+}
 }
