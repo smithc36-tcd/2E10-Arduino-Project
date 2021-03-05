@@ -104,8 +104,6 @@ void stopbuggy(){
 }
 
 void read_from_client(){
-
-  //Serial.println("Here in read");
   WiFiClient client = server.available();
   if (client.connected()) {
   char c = client.read();
