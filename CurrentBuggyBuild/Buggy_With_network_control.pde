@@ -27,6 +27,12 @@ void setup() {
   .setPosition(100,150)
   .setSize(200,19)
   .setFont(p);
+
+    cp5.addButton("HiNorasDad")
+  .setValue(0)
+  .setPosition(100,300)
+  .setSize(200,19)
+  .setFont(p);
  
 }
 void draw() {
