@@ -19,13 +19,13 @@ void setup() {
   cp5.addButton("StartBuggy")
   .setValue(0)
   .setPosition(100,100)
-  .setSize(200,19)
+  .setSize(200,25)
   .setFont(p);
   
     cp5.addButton("StopBuggy")
   .setValue(0)
   .setPosition(100,150)
-  .setSize(200,19)
+  .setSize(200,25)
   .setFont(p);
 
 
