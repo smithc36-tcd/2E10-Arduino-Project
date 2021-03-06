@@ -35,12 +35,12 @@ void draw() {
 public void StartBuggy(int theValue) {
   if (myClient.active()){
     myClient.write("a");
-     println("StartR Button Pressed");
+     println("Start Button Pressed");
   }
 }
 public void StopBuggy(int theValue) {
   if (myClient.active()){
     myClient.write("d");
-     println("StartL Button Pressed");
+     println("Stop Button Pressed");
   }
 }
