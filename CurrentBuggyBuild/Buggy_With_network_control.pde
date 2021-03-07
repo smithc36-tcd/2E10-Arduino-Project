@@ -1,101 +1,205 @@
-import controlP5.*;
-import processing.net.*;
+#include <WiFiNINA.h>
 
-ControlP5 cp5;
-Client myClient;
-char ServerChar;
-color BLACK = #000000;
-color GREEN = #07F515;
-boolean LEYE = false;
-boolean REYE = false;
+char ssid[] = "TP-LINK_179E";
+char pass[] = "56702460";
+WiFiServer server(5200);
+WiFiClient client;
+char command;
+
+void Buggy_line_follow();
+void read_from_client();
+void stopbuggy();
+long US_sensor();
+void Report_IR_L(int lastIRValue);
+void Report_IR_R(int lastIRValue);
+
+const int Value = 255;
+const int Off = 0;
+
+const int LEYE = 2; // sets name for left eye 
+const int REYE = 10; // sets name for right eye 
+
+const int US_TRIG = 9;//name for Ultrasonic sensor
+const int US_ECHO = 8; 
+
+const int PosLeftMotor = 5;
+const int NegLeftMotor = 6;
+const int NegRightMotor = 11;
+const int PosRightMotor = 12;
+
+bool buggy_line_follow_bool = false;
+double timer;
+
+int lastValueOfLIREye;
+int lastValueOfRIREye;
 
 void setup() {
-  size(600,600);
-  cp5 = new ControlP5(this);
-  myClient=new Client(this,"192.168.1.107" ,5200);
+  Serial.begin(9600);
   
+  pinMode( LEYE, INPUT );
+  pinMode( REYE, INPUT );// Sets eye pins as inputs 
+  pinMode(US_ECHO, INPUT);//sets echo as input
+  pinMode(US_TRIG, OUTPUT); // Sets trigger as input
+  pinMode(PosLeftMotor, OUTPUT);
+  pinMode(NegLeftMotor, OUTPUT);
+  pinMode(PosRightMotor, OUTPUT);
+  pinMode(NegRightMotor, OUTPUT);
   
-  PFont p = createFont("Helvetica",10);
-  //ControlFont myFont = new ControlFont(p);
-  
-  
-  cp5.addButton("StartBuggy")
-  .setValue(0)
-  .setPosition(200,100)
-  .setSize(200,40)
-  .setFont(p);
-  
-    cp5.addButton("StopBuggy")
-  .setValue(0)
-  .setPosition(200,150)
-  .setSize(200,40)
-  .setFont(p);
+  WiFi.begin(ssid, pass);
+  IPAddress ip = WiFi.localIP();
+  Serial.print("IP Address:");
+  Serial.println(ip);
+  server.begin();
 }
-void draw() {
-PFont p = createFont("Helvetica",20);
-background(255);
 
-text("Controls", 300, 50);
-textAlign(CENTER,CENTER);
-textFont(p);
-fill(0);
+void loop() { 
+  read_from_client();
 
-text("Buggy Reporting", 300, 300);
+  while(buggy_line_follow_bool){
+     Buggy_line_follow();
+     read_from_client();
+     if(buggy_line_follow_bool == false){
+      break;
+     }
+  }
+}
 
-if(myClient.active()){
-    ServerChar = myClient.readChar();  
-     if(ServerChar ==  'u'){LEYE = true;}
-     if(ServerChar ==  'i'){LEYE = false;}
-     if(ServerChar ==  'o'){REYE = true; }
-     if(ServerChar ==  'p'){REYE = false;}
+// ==========================================================================================
+void Buggy_line_follow(){
+ int distance;
+  long duration;
+  bool US_Close = false;
+
+ duration = US_sensor();
+
+  distance = duration/58;
+
+  if(distance < 10){
+    US_Close = true;
+    Serial.println("less than 10");
+  }else{
+    US_Close = false; 
+    }
+  
+  if( digitalRead( LEYE ) == LOW && !US_Close ){ // if left eye is LOW send high signal to motor input A1 and HIGH to A2
+    analogWrite(PosLeftMotor, Value);
+    }else{
+    analogWrite(PosLeftMotor, Off);// No power 
+  }
+
+  if( digitalRead( REYE ) == LOW && !US_Close){ // if left eye is LOW send high signal to motor input A4 and to A3
+    analogWrite(PosRightMotor, Value);
+  }else{
+    analogWrite(PosRightMotor, Off); // no power 
+  }
+  
+  if(lastValueOfLIREye != digitalRead(LEYE)){
+    lastValueOfLIREye = digitalRead(LEYE);
+    Report_IR_L(lastValueOfLIREye);
+    //Serial.println("Left eye change");
+  }
+
+  if(lastValueOfRIREye != digitalRead(REYE)){
+    lastValueOfRIREye = digitalRead(REYE);
+    Report_IR_R(lastValueOfRIREye);
+    //Serial.println("Right eye change");
+  }
+   read_from_client();
 }
-  if(LEYE){text("Left Eye High", 300, 325);}
-  if(!LEYE){text("Left Eye Low", 300, 325);}
-  if(REYE){text("Right Eye High", 300, 350);}
-  if(!REYE){text("Right Eye Low", 300, 350);}
-     
+
+// ==========================================================================================
+void stopbuggy(){
+  
+  analogWrite(PosLeftMotor, Off);
+  analogWrite(PosRightMotor, Off);
 }
-public void StartBuggy(int theValue) {
-  if (myClient.active()){
-    myClient.write("a");
-     println("Start Buggy Button Pressed");
+// ==========================================================================================
+long US_sensor(){
+  
+  digitalWrite( US_TRIG, LOW );
+  delayMicroseconds(2);
+  digitalWrite( US_TRIG, HIGH );
+  delayMicroseconds( 10 );
+  digitalWrite( US_TRIG, LOW );
+
+  long duration = pulseIn( US_ECHO, HIGH );
+
+  timer = micros();
+  return duration;
+}
+// ==========================================================================================
+void read_from_client(){
+
+  client = server.available();
+  if (client.connected()) {
+  char c = client.read();
+
+        if (c == 'a') {
+          buggy_line_follow_bool = true;
+        }
+        if (c == 'd') {
+          buggy_line_follow_bool = false;
+          stopbuggy();
+        }
   }
 }
-public void StopBuggy(int theValue) {
-  if (myClient.active()){
-    myClient.write("d");
-     println("Stop Buggy Button Pressed");
+// ==========================================================================================
+void Report_IR_L(int lastIRValue){
+client = server.available();
+  //if (client.connected()) {
+    if(digitalRead(LEYE) == HIGH) {
+      server.write("u");
+      //client.stop();
+      Serial.println("u");
+    }
+    if(digitalRead(LEYE) == LOW) {
+      server.write("i");
+      //client.stop();
+      Serial.println("i");
+    }
   }
+//}
+// ==========================================================================================
+void Report_IR_R(int lastIRValue){
+client = server.available();
+ //if (client.connected()) {
+    if(lastIRValue == HIGH) {
+      server.write("o");
+      //client.stop();
+      Serial.println("o");
+    }
+    if(lastIRValue == LOW) {
+      server.write("p");
+      //client.stop();
+      Serial.println("p");
+    }
+ // }
 }
-/*
-void IRCheck(){
-  if(myClient.active()){
-    //println("here");
-    ServerChar = myClient.readChar();
-    if( myClient.readChar() == 'u'){
-      ServerChar = 'u';
-      println("ServerChar u");
+// ==========================================================================================
+
+
+
+/*void write_to_client(){
+  client = server.available();
+  if (client.connected()) {
+    if(digitalRead(LEYE) == HIGH){
+      char LEYEON = 'u';
+      server.write(LEYEON);
+      Serial.print(LEYEON);
     }
-    if( myClient.readChar() == 'i'){
-      ServerChar = 'i';
-      println("ServerChar i");
+    if(digitalRead(LEYE) == LOW){
+       char LEYEOFF = 'i';   
+      server.write(LEYEOFF);
+      Serial.print(LEYEOFF);
     }
-    if( myClient.readChar() == 'o'){
-      ServerChar = 'o';
-      println("ServerChar o");
+    if(digitalRead(REYE) == HIGH){
+      char REYEON = 'o';
+      server.write(REYEON);
+      Serial.print(REYEON);
     }
-    if( myClient.readChar() == 'p'){
-      ServerChar = 'p';
-      println("ServerChar p");
+    if(digitalRead(REYE) == LOW){
+      char REYEOFF = 'p';
+      server.write(REYEOFF);
+      Serial.print(REYEOFF);
     }
-  }
-}
-*/
-/*public void Lefteye (int theValue){
-  if(myClient.active()){
-    char ServerChar = char(myClient.read());
-    if( ServerChar == 'u'){
-      Toggle("Lefteye").setValue(1);
-    }
-  }
 }*/
