@@ -3,12 +3,15 @@
 char ssid[] = "TP-LINK_179E";
 char pass[] = "56702460";
 WiFiServer server(5200);
+WiFiClient client;
 char command;
 
 void Buggy_line_follow();
 void read_from_client();
-void write_to_client();
 void stopbuggy();
+long US_sensor();
+void Report_IR_L(int lastIRValue);
+void Report_IR_R(int lastIRValue);
 
 const int Value = 255;
 const int Off = 0;
@@ -25,6 +28,10 @@ const int NegRightMotor = 11;
 const int PosRightMotor = 12;
 
 bool buggy_line_follow_bool = false;
+double timer;
+
+int lastValueOfLIREye;
+int lastValueOfRIREye;
 
 void setup() {
   Serial.begin(9600);
@@ -47,7 +54,6 @@ void setup() {
 
 void loop() { 
   read_from_client();
-  //write_to_client();
 
   while(buggy_line_follow_bool){
      Buggy_line_follow();
@@ -55,23 +61,16 @@ void loop() {
      if(buggy_line_follow_bool == false){
       break;
      }
-    // write_to_client();
   }
 }
 
-
+// ==========================================================================================
 void Buggy_line_follow(){
  int distance;
   long duration;
   bool US_Close = false;
 
-  digitalWrite( US_TRIG, LOW );
-  delayMicroseconds(2);
-  digitalWrite( US_TRIG, HIGH );
-  delayMicroseconds( 10 );
-  digitalWrite( US_TRIG, LOW );
-
-  duration = pulseIn( US_ECHO, HIGH );
+ duration = US_sensor();
 
   distance = duration/58;
 
@@ -94,17 +93,44 @@ void Buggy_line_follow(){
     analogWrite(PosRightMotor, Off); // no power 
   }
   
+  if(lastValueOfLIREye != digitalRead(LEYE)){
+    lastValueOfLIREye = digitalRead(LEYE);
+    Report_IR_L(lastValueOfLIREye);
+    //Serial.println("Left eye change");
+  }
+
+  if(lastValueOfRIREye != digitalRead(REYE)){
+    lastValueOfRIREye = digitalRead(REYE);
+    Report_IR_R(lastValueOfRIREye);
+    //Serial.println("Right eye change");
+  }
    read_from_client();
-   //write_to_client();
 }
+
+// ==========================================================================================
 void stopbuggy(){
   
   analogWrite(PosLeftMotor, Off);
   analogWrite(PosRightMotor, Off);
 }
+// ==========================================================================================
+long US_sensor(){
+  
+  digitalWrite( US_TRIG, LOW );
+  delayMicroseconds(2);
+  digitalWrite( US_TRIG, HIGH );
+  delayMicroseconds( 10 );
+  digitalWrite( US_TRIG, LOW );
 
+  long duration = pulseIn( US_ECHO, HIGH );
+
+  timer = micros();
+  return duration;
+}
+// ==========================================================================================
 void read_from_client(){
-  WiFiClient client = server.available();
+
+  client = server.available();
   if (client.connected()) {
   char c = client.read();
 
@@ -117,9 +143,44 @@ void read_from_client(){
         }
   }
 }
+// ==========================================================================================
+void Report_IR_L(int lastIRValue){
+client = server.available();
+  //if (client.connected()) {
+    if(digitalRead(LEYE) == HIGH) {
+      server.write("u");
+      //client.stop();
+      Serial.println("u");
+    }
+    if(digitalRead(LEYE) == LOW) {
+      server.write("i");
+      //client.stop();
+      Serial.println("i");
+    }
+  }
+//}
+// ==========================================================================================
+void Report_IR_R(int lastIRValue){
+client = server.available();
+ //if (client.connected()) {
+    if(lastIRValue == HIGH) {
+      server.write("o");
+      //client.stop();
+      Serial.println("o");
+    }
+    if(lastIRValue == LOW) {
+      server.write("p");
+      //client.stop();
+      Serial.println("p");
+    }
+ // }
+}
+// ==========================================================================================
 
-void write_to_client(){
-  WiFiClient client = server.available();
+
+
+/*void write_to_client(){
+  client = server.available();
   if (client.connected()) {
     if(digitalRead(LEYE) == HIGH){
       char LEYEON = 'u';
@@ -129,14 +190,16 @@ void write_to_client(){
     if(digitalRead(LEYE) == LOW){
        char LEYEOFF = 'i';   
       server.write(LEYEOFF);
+      Serial.print(LEYEOFF);
     }
     if(digitalRead(REYE) == HIGH){
       char REYEON = 'o';
       server.write(REYEON);
+      Serial.print(REYEON);
     }
     if(digitalRead(REYE) == LOW){
       char REYEOFF = 'p';
       server.write(REYEOFF);
+      Serial.print(REYEOFF);
     }
-}
-}
+}*/
