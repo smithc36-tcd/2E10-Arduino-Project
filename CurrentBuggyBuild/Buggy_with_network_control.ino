@@ -12,6 +12,7 @@ void stopbuggy();
 long US_sensor();
 void Report_IR_L(int lastIRValue);
 void Report_IR_R(int lastIRValue);
+void buggy_status();
 
 const int Value = 255;
 const int Off = 0;
@@ -28,11 +29,14 @@ const int NegRightMotor = 11;
 const int PosRightMotor = 12;
 
 bool buggy_line_follow_bool = false;
-double timer;
+bool LeftOn = false;
+bool RightOn = false;
+int buggy_status_switch = 1;
+int prevStatus;
 
 int lastValueOfLIREye;
 int lastValueOfRIREye;
-
+// ==========================================================================================
 void setup() {
   Serial.begin(9600);
   
@@ -51,13 +55,15 @@ void setup() {
   Serial.println(ip);
   server.begin();
 }
-
+// ==========================================================================================
 void loop() { 
   read_from_client();
+  buggy_status();
 
   while(buggy_line_follow_bool){
      Buggy_line_follow();
      read_from_client();
+     buggy_status();
      if(buggy_line_follow_bool == false){
       break;
      }
@@ -83,28 +89,33 @@ void Buggy_line_follow(){
   
   if( digitalRead( LEYE ) == LOW && !US_Close ){ // if left eye is LOW send high signal to motor input A1 and HIGH to A2
     analogWrite(PosLeftMotor, Value);
+    LeftOn = true;
     }else{
     analogWrite(PosLeftMotor, Off);// No power 
+    LeftOn = false;
   }
 
   if( digitalRead( REYE ) == LOW && !US_Close){ // if left eye is LOW send high signal to motor input A4 and to A3
     analogWrite(PosRightMotor, Value);
+    RightOn = true;
   }else{
     analogWrite(PosRightMotor, Off); // no power 
+    RightOn = false;
   }
   
   if(lastValueOfLIREye != digitalRead(LEYE)){
     lastValueOfLIREye = digitalRead(LEYE);
     Report_IR_L(lastValueOfLIREye);
-    //Serial.println("Left eye change");
   }
 
   if(lastValueOfRIREye != digitalRead(REYE)){
     lastValueOfRIREye = digitalRead(REYE);
     Report_IR_R(lastValueOfRIREye);
-    //Serial.println("Right eye change");
   }
+
+  
    read_from_client();
+   buggy_status();
 }
 
 // ==========================================================================================
@@ -124,8 +135,7 @@ long US_sensor(){
 
   long duration = pulseIn( US_ECHO, HIGH );
 
-  timer = micros();
-  return duration;
+    return duration;
 }
 // ==========================================================================================
 void read_from_client(){
@@ -146,60 +156,44 @@ void read_from_client(){
 // ==========================================================================================
 void Report_IR_L(int lastIRValue){
 client = server.available();
-  //if (client.connected()) {
     if(digitalRead(LEYE) == HIGH) {
       server.write("u");
-      //client.stop();
-      Serial.println("u");
     }
     if(digitalRead(LEYE) == LOW) {
       server.write("i");
-      //client.stop();
-      Serial.println("i");
+
     }
-  }
-//}
+}
 // ==========================================================================================
 void Report_IR_R(int lastIRValue){
 client = server.available();
- //if (client.connected()) {
     if(lastIRValue == HIGH) {
       server.write("o");
-      //client.stop();
-      Serial.println("o");
     }
     if(lastIRValue == LOW) {
       server.write("p");
-      //client.stop();
-      Serial.println("p");
     }
- // }
 }
 // ==========================================================================================
+void buggy_status(){
+client = server.available();
 
+if(LeftOn && RightOn){buggy_status_switch = 1;}
+if(LeftOn && !RightOn){buggy_status_switch = 2;}
+if(!LeftOn && RightOn){buggy_status_switch = 3;}
+if(!LeftOn && !RightOn){buggy_status_switch = 4;}
 
+  if(buggy_status_switch != prevStatus){
+  
+      switch(buggy_status_switch){
+  case 1: server.write("c");Serial.println("case 1");break;
+  case 2: server.write("v");Serial.println("case 2");break;
+  case 3: server.write("b");Serial.println("case 3");break;
+  case 4: server.write("n");Serial.println("case 4");break;
+  }
+  
+  }
+  prevStatus = buggy_status_switch;
+}
 
-/*void write_to_client(){
-  client = server.available();
-  if (client.connected()) {
-    if(digitalRead(LEYE) == HIGH){
-      char LEYEON = 'u';
-      server.write(LEYEON);
-      Serial.print(LEYEON);
-    }
-    if(digitalRead(LEYE) == LOW){
-       char LEYEOFF = 'i';   
-      server.write(LEYEOFF);
-      Serial.print(LEYEOFF);
-    }
-    if(digitalRead(REYE) == HIGH){
-      char REYEON = 'o';
-      server.write(REYEON);
-      Serial.print(REYEON);
-    }
-    if(digitalRead(REYE) == LOW){
-      char REYEOFF = 'p';
-      server.write(REYEOFF);
-      Serial.print(REYEOFF);
-    }
-}*/
+// ==========================================================================================
