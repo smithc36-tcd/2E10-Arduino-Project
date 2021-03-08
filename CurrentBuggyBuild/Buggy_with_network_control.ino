@@ -3,13 +3,12 @@
 char ssid[] = "TP-LINK_179E";
 char pass[] = "56702460";
 WiFiServer server(5200);
-WiFiClient client;
-char command;
+WiFiClient client; // Different elements of wifi set up 
 
-void Buggy_line_follow();
-void read_from_client();
-void stopbuggy();
-long US_sensor();
+void Buggy_line_follow(); // main function driving the buggy/line follwing 
+void read_from_client(); //Reads from processing app
+void stopbuggy();//stops buggy 
+int US_sensor();//US sensor function 
 void Report_IR_L(int lastIRValue);
 void Report_IR_R(int lastIRValue);
 void buggy_status();
@@ -31,6 +30,8 @@ const int PosRightMotor = 12;
 bool buggy_line_follow_bool = false;
 bool LeftOn = false;
 bool RightOn = false;
+bool US_Close = false;
+int increment = 10;
 int buggy_status_switch = 1;
 int prevStatus;
 
@@ -53,14 +54,14 @@ void setup() {
   IPAddress ip = WiFi.localIP();
   Serial.print("IP Address:");
   Serial.println(ip);
-  server.begin();
+  server.begin(); //arduino server set up and prints IP address for server
 }
 // ==========================================================================================
 void loop() { 
   read_from_client();
   buggy_status();
 
-  while(buggy_line_follow_bool){
+  while(buggy_line_follow_bool){ // if button is pressed on client buggy will start 
      Buggy_line_follow();
      read_from_client();
      buggy_status();
@@ -73,19 +74,19 @@ void loop() {
 // ==========================================================================================
 void Buggy_line_follow(){
  int distance;
-  long duration;
-  bool US_Close = false;
 
- duration = US_sensor();
+if(increment > 50){ // every 50 iterations it will update the distance value and check if there is an obstacle 
+ distance = US_sensor();
 
-  distance = duration/58;
-
-  if(distance < 10){
+ if(distance < 10){
     US_Close = true;
-    Serial.println("less than 10");
-  }else{
+ }else{
     US_Close = false; 
     }
+ increment=0;
+}
+increment++;
+ 
   
   if( digitalRead( LEYE ) == LOW && !US_Close ){ // if left eye is LOW send high signal to motor input A1 and HIGH to A2
     analogWrite(PosLeftMotor, Value);
@@ -119,13 +120,13 @@ void Buggy_line_follow(){
 }
 
 // ==========================================================================================
-void stopbuggy(){
+void stopbuggy(){// stops buggy 
   
   analogWrite(PosLeftMotor, Off);
   analogWrite(PosRightMotor, Off);
 }
 // ==========================================================================================
-long US_sensor(){
+int US_sensor(){
   
   digitalWrite( US_TRIG, LOW );
   delayMicroseconds(2);
@@ -133,9 +134,10 @@ long US_sensor(){
   delayMicroseconds( 10 );
   digitalWrite( US_TRIG, LOW );
 
-  long duration = pulseIn( US_ECHO, HIGH );
+  long duration = pulseIn( US_ECHO, HIGH ); // pulse in measures the time take for the signal to return to the sensor 
+  int distance = duration/58;
 
-    return duration;
+    return distance;
 }
 // ==========================================================================================
 void read_from_client(){
@@ -181,15 +183,15 @@ client = server.available();
 if(LeftOn && RightOn){buggy_status_switch = 1;}
 if(LeftOn && !RightOn){buggy_status_switch = 2;}
 if(!LeftOn && RightOn){buggy_status_switch = 3;}
-if(!LeftOn && !RightOn){buggy_status_switch = 4;}
+if(!LeftOn && !RightOn){buggy_status_switch = 4;} // identifies which state the buggy is in based on booleans related to the motors 
 
-  if(buggy_status_switch != prevStatus){
+  if(buggy_status_switch != prevStatus){//poll to check if buggy status has changed 
   
       switch(buggy_status_switch){
-  case 1: server.write("c");Serial.println("case 1");break;
-  case 2: server.write("v");Serial.println("case 2");break;
-  case 3: server.write("b");Serial.println("case 3");break;
-  case 4: server.write("n");Serial.println("case 4");break;
+  case 1: server.write("c");break; // Case 1: The buggy is moving forward
+  case 2: server.write("v");break; // Case 2: The buggy is turning right
+  case 3: server.write("b");break; // Case 3: The buggy is turning left
+  case 4: server.write("n");break; // Case 4: The buggy is stopped
   }
   
   }
