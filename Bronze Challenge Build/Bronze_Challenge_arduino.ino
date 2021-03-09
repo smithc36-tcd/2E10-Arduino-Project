@@ -6,7 +6,7 @@ WiFiServer server(5200); //Creates a server that listens for incoming connection
 WiFiClient client; // Creates a client that can connect to to a specified internet IP address
 
 
-//=========================== function declarations ========================
+//=========================== function declarations ============================================================
 void Buggy_line_follow(); // main function driving the buggy/line follwing 
 void read_from_client(); //Reads from processing app
 void stopbuggy();//stops buggy 
@@ -15,7 +15,7 @@ void Report_IR_L(int lastIRValue);
 void Report_IR_R(int lastIRValue);
 void buggy_status();
 
-// ========================== global variable declarations =====================
+// ========================== global variable declarations =====================================================
 const int Value = 255;
 const int Off = 0;//defines values for analog writing to pins (0-255)
 
@@ -40,7 +40,8 @@ int buggy_status_switch = 1;
 int prevStatus;
 int lastValueOfLIREye;
 int lastValueOfRIREye; //polls for eyes and buggy 
-// ============================ SetUp ==============================================================
+
+// ============================ SetUp ===========================================================================
 void setup() {
   Serial.begin(9600); // default serial monitor speed 
   
@@ -59,7 +60,7 @@ void setup() {
   Serial.println(ip); 
   server.begin(); //arduino server set up and prints IP address for server
 }
-// ========================== Loop ================================================================
+// ========================== Loop ===============================================================================
 void loop() { 
   read_from_client();
   buggy_status();
@@ -74,7 +75,7 @@ void loop() {
   }
 }
 
-// ==========================================================================================
+// =================================================================================================================
 void Buggy_line_follow(){
  int distance;
 
@@ -83,8 +84,10 @@ if(increment > 50){ // every 50 iterations it will update the distance value and
 
  if(distance < 10){
     US_Close = true;
+    server.write("k"); // writes 'k' if buggy is obstructed 
  }else{
-    US_Close = false; 
+    US_Close = false;
+    server.write("l"); //wriets 'l' if buggy is clear
     }
  increment=0;
 }
@@ -122,13 +125,13 @@ increment++;
    buggy_status(); //Everyloop the buggy reports its current status and the status of the IR eyes
 }
 
-// ==========================================================================================
+// =================================================================================================================
 void stopbuggy(){// stops buggy 
   
   analogWrite(PosLeftMotor, Off);
   analogWrite(PosRightMotor, Off); // sets the motors value to 0
 }
-// ==========================================================================================
+// =================================================================================================================
 int US_sensor(){ // calculates the distance of objects on front of the buggy and returns it as an integer 
   
   digitalWrite( US_TRIG, LOW );
@@ -142,7 +145,7 @@ int US_sensor(){ // calculates the distance of objects on front of the buggy and
 
     return distance;
 }
-// ==========================================================================================
+// =================================================================================================================
 void read_from_client(){ // Reads from the client to detect whether the start/stop command was recieved 
 
   client = server.available();
@@ -158,7 +161,7 @@ void read_from_client(){ // Reads from the client to detect whether the start/st
         }
   }
 }
-// ==========================================================================================
+// =================================================================================================================
 void Report_IR_L(int lastIRValue){ // reports current status of the  Left IR eye to the client 
 client = server.available();
     if(digitalRead(LEYE) == HIGH) {
@@ -169,7 +172,7 @@ client = server.available();
 
     }
 }
-// ==========================================================================================
+// =================================================================================================================
 void Report_IR_R(int lastIRValue){ // reports current status of the Right IR eye to the client
 client = server.available();
     if(lastIRValue == HIGH) {
@@ -179,7 +182,7 @@ client = server.available();
       server.write("p"); //writes character 'p' to all clients connected to server 
     }
 }
-// ==========================================================================================
+// =================================================================================================================
 void buggy_status(){
 client = server.available();
 
@@ -201,4 +204,4 @@ if(!LeftOn && !RightOn){buggy_status_switch = 4;} // identifies which state the 
   prevStatus = buggy_status_switch; //updates poll
 }
 
-// ==========================================================================================
+// =================================================================================================================
