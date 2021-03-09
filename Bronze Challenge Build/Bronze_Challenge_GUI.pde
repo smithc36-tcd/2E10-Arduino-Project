@@ -58,7 +58,7 @@ if(myClient.active()){ // Reads from the server and if it reads a meaningful cha
      if(ServerChar ==  'p'){REYE = false;}//if right eye is high or low 
      
      if(ServerChar == 'k'){buggy_obstructed = true;}
-     if(ServerChar == 'l'){buggy_obstructed = false;}
+     if(ServerChar == 'l'){buggy_obstructed = false;}//reports if there is an obstruction on fron of the buggy 
      
      if(ServerChar == 'c'){buggy_status = 1;}//Buggy moving 
      if(ServerChar == 'v'){buggy_status = 2;}//buggy turning right
