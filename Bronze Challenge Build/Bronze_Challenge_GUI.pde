@@ -6,12 +6,13 @@ Client myClient;
 char ServerChar; // character recieved from the server which dictates the reporting output 
 boolean LEYE = false;
 boolean REYE = false;
+boolean buggy_obstructed = false;
 int buggy_status = 4; //buggy status 
 
 void setup() {
   size(600,600); // sets size of window 
   cp5 = new ControlP5(this);
-  myClient=new Client(this,"192.168.1.105" ,5200); // sets client using the Arduino IP address and port number 5200
+  myClient=new Client(this,"192.168.1.108" ,5200); // sets client using the Arduino IP address and port number 5200
   
   PFont p = createFont("Helvetica",16); // sets fonts using in buttons 
   
@@ -47,7 +48,7 @@ text("Eyes:", 220, 337);
 text("Status:", 220, 450);
 noFill();
 strokeWeight(2);
-rect(150, 300, 300, 200,10); // sets up graphical User interface 
+rect(150, 300, 300, 250,10); // sets up graphical User interface 
 
 if(myClient.active()){ // Reads from the server and if it reads a meaningful character it will update the related output
     ServerChar = myClient.readChar();  
@@ -56,15 +57,21 @@ if(myClient.active()){ // Reads from the server and if it reads a meaningful cha
      if(ServerChar ==  'o'){REYE = true; }
      if(ServerChar ==  'p'){REYE = false;}//if right eye is high or low 
      
+     if(ServerChar == 'k'){buggy_obstructed = true;}
+     if(ServerChar == 'l'){buggy_obstructed = false;}
+     
      if(ServerChar == 'c'){buggy_status = 1;}//Buggy moving 
      if(ServerChar == 'v'){buggy_status = 2;}//buggy turning right
      if(ServerChar == 'b'){buggy_status = 3;}//buggy turning left
-     if(ServerChar == 'n'){buggy_status = 4;}// buggy stopped
+     if(ServerChar == 'n'){buggy_status = 4;}//buggy stopped
 }
   if(LEYE){text("Left Eye High", 350, 325);}//Updates IR status to the UI
   if(!LEYE){text("Left Eye Low", 350, 325);}
   if(REYE){text("Right Eye High", 350, 350);}
   if(!REYE){text("Right Eye Low", 350, 350);}
+  
+  if(buggy_obstructed){text("Obstructed", 300, 500);}
+  if(!buggy_obstructed){text("Not Obstructed", 300, 500);}
   
   switch(buggy_status){ // switch statement which updates the stats of the buggy on the UI
     case 1: text("Moving!", 350, 450);break;
