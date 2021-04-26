@@ -51,26 +51,7 @@ void setup() {
  float accAnglesum =0, accAngleAvg;
 
  IMU.begin();
- /*
- delay(1000);
- int N = 20;
- for(int i = 1; i <= N; i++){
-  if (IMU.gyroscopeAvailable() && IMU.accelerationAvailable()) {
-    IMU.readGyroscope(GYx, GYy, GYz);
-
-      GYx = GYx - GYxoff;
-      
-    IMU.readAcceleration(Accx,Accy,Accz);
-
-      Accy = Accy - Accyoff;
-      //Accz = Accz - Acczoff;
-    }
-     accAngle = atan2(Accy, Accz)*RAD_TO_DEG;
-     accAnglesum = accAnglesum + accAngle;
- }
-   accAngleAvg = accAnglesum/N;
-   GYangle = 0 - accAngleAvg;
-   //Input = GYangle;*/
+ 
 
   Setpoint = 0;// creates set point 
   anglePID.SetMode(AUTOMATIC); // 
