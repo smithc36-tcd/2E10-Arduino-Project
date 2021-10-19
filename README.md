@@ -11,20 +11,32 @@ In summary: Traverse the track, don’t crash into any obstacles, report events 
 
 In detail:
 -Assemble your buggy
+
 -Construct a track according to the track specification
+
 -Starting and stopping the buggy via wireless control, have it traverse the track twice. Pause for any obstacles, reporting these events to the control PC.
+
 Details:
 -The track should consist of a line forming a loop with a total track length (perimeter) of at least 3m.
+
 -The track itself is a line on a background of contrasting colour (such that it the line can be detected by the IR sensors). A light line on a dark background or vice versa;         black marker or electrical tape on a white paper background would be suitable.
+
 -The track should form a loop (see image below; you do not need to copy this precisely but your track should approximate the shape, and in particular you must include at least       two right-angle turns. The loop may be closed with a longer gentle curve if that is easier for you to make). The total length should be approximately 3m.
+
 -The PC control program must:
       -Provide the user with start and stop buttons that can be used to begin and end the buggy's run on the track.
+      
       -Provide an output area that displays telemetry received from the buggy during the run. 
+      
 -The buggy must
         -Start the run on receiving a GO command via WiFi  from the controlling PC
+        
         -Stop the run on receiving a STOP command via WiFi from the controlling PC
+        
         -Traverse the track twice without derailing, using the IR sensors to follow the line of the track
+        
         -Pause for obstacles as detected by the US rangefinder. The stopping distance is up to you (but about 10cm is reasonable).
+        
         -Report to the controlling PC when obstacles are detected and cleared (a simple "obstacle seen" message is sufficient, but you may choose to do something more details,               e.g. "stopping for obstacle at 5cm distance"). The reporting does not have to display within the Processing graphics window (you can use the console).
 
 
