@@ -40,4 +40,4 @@ Silver Challenge:
 Gold Challenge:
     -The one stipulation here is that y ou must  use  the Nano 33 IoT’s on-board  IMU and  make creative  use of the acceleration and/or orientation data.  Consider reporting   your heading and plotting it on screen.  
 
-Our gold challenge was based on using PID control along with the on-board IMU to measure the yaw and roll, and balancing a modified two-wheeled buggy. 
+Our gold challenge was based on using PID control along with the on-board IMU to measure the yaw and roll, and balancing a modified two-wheeled buggy. This was all along wiht building a GUI using processing and using arduino to report data such as current angle etc. 
